@@ -1,0 +1,71 @@
+name: 'Terraform Plan & Approval'
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-plan:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=main.tfplan
+        working-directory: ./terraform
+
+      # Opcional: Subir el plan como artefacto para descargarlo y revisarlo
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-plan
+          path: ./terraform/main.tfplan
+
+  terraform-apply:
+    name: 'Terraform Apply'
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment: production # Aquí es donde se activa la pausa de aprobación
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-plan
+          path: ./terraform
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve main.tfplan
+        working-directory: ./terraform
