@@ -1,3 +1,4 @@
+/*
 # Key Vault
 resource "azurerm_key_vault" "main" {
   name                = "kv-devops-fb-${var.environment}"
@@ -69,3 +70,4 @@ resource "azurerm_key_vault_secret" "api_key" {
 
 # Data source para obtener configuración actual
 data "azurerm_client_config" "current" {}
+*/
