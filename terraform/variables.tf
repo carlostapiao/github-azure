@@ -9,7 +9,7 @@ variable "location" {
     type          = string
     default       = "eastus"
 }
-
+/*
 variable "vm_size" {
     description   = "Tamaño de la VM"
     type          = string
@@ -46,4 +46,4 @@ variable "api_key" {
     type          = string
     sensitive     = true
     default       = "sk-1234567890abcdef"
-}
+}*/
